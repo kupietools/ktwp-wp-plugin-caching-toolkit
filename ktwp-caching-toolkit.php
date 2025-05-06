@@ -14,123 +14,7 @@
  * Text Domain:       mk-plugin
  * Domain Path:       /languages
  */
-/*
-add_action('admin_menu', function() { 
-    global $menu;
-    $exists = false;
-    
-    // Check if KTools exists
-    if ($menu) {
-        foreach($menu as $item) {
-            if (isset($item[0]) && $item[0] === 'KupieTools') {
-                $exists = true;
-                break;
-            }
-        }
-    }
-    
-    // Create KTools page if it doesn't exist
-    if (!$exists) {
-        add_menu_page(
-            'KupieTools', 
-            'KupieTools',
-            'manage_options',
-            'kupietools',
-            function() {
-                // Main page wrapper - each plugin's content will appear inside this
-                echo '<div class="wrap"><h1>KupieTools</h1>';
-                do_action('kupietools_sections');
-                echo '</div>';
-            },
-            'dashicons-admin-tools'
-        );
-    }
 
-    // Add THIS plugin's section (will appear whether we created the page or not)
-    add_action('kupietools_sections', function() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ktwp_cache_submit'])) {
-            update_option('ktwp_cache_save_post', isset($_POST['ktwp_cache_save_post']) ? '1' : '0');
-            update_option('ktwp_cache_create_category', isset($_POST['ktwp_cache_create_category']) ? '1' : '0');
-            update_option('ktwp_cache_edited_category', isset($_POST['ktwp_cache_edited_category']) ? '1' : '0');
-        }
-        ?>
-        <details class="card ktwpcache" style="max-width: 800px; padding: 20px; margin-top: 20px;" open="true">
-            <summary style="font-weight:bold;">KTWP Cache ToolkitSettings</summary>
-			Clear KTWP cache whenever the following Wordpress actions run:
-            <form method="post">
-                <div>
-                    <p>
-                        <label>
-                            <input type="checkbox" name="ktwp_cache_save_post" value="1" 
-                                <?php checked(get_option('ktwp_cache_save_post','1'), '1'); 
-								   //   checked(get_option('ktwp_cache_save_post','1'), '1'); sets to default checked 
-								   ?>> 
-                            <strong>Cache save_post</strong>
-                        </label>
-                    </p>
-                    <p>
-                        <label>
-                            <input type="checkbox" name="ktwp_cache_create_category" value="1"
-                                <?php checked(get_option('ktwp_cache_create_category','1'), '1'); ?>>
-                            <strong>Cache create_category</strong>
-                        </label>
-                    </p>
-                    <p>
-                        <label>
-                            <input type="checkbox" name="ktwp_cache_edited_category" value="1"
-                                <?php checked(get_option('ktwp_cache_edited_category','1'), '1'); ?>>
-                            <strong>Cache edited_category</strong>
-                        </label>
-                    </p>
-                    <p>
-                        <label>
-                            <input type="checkbox" name="ktwp_cache_delete_category" value="1"
-                                <?php checked(get_option('ktwp_cache_delete_category','1'), '1'); ?>>
-                            <strong>Cache delete_category</strong>
-                        </label>
-                    </p>
-                    <p>
-                        <label>
-                            <input type="checkbox" name="ktwp_cache_create_post_tag" value="1"
-                                <?php checked(get_option('ktwp_cache_create_post_tag','1'), '1'); ?>>
-                            <strong>Cache create_post_tag</strong>
-                        </label>
-                    </p>
-                    <p>
-                        <label>
-                            <input type="checkbox" name="ktwp_cache_edited_terms" value="1"
-                                <?php checked(get_option('ktwp_cache_edited_terms','1'), '1'); ?>>
-                            <strong>Cache edited_terms</strong>
-                        </label>
-                    </p>
-                    <p>
-                        <label>
-                            <input type="checkbox" name="ktwp_cache_delete_term" value="1"
-                                <?php checked(get_option('ktwp_cache_delete_term','1'), '1'); ?>>
-                            <strong>Cache delete_term</strong>
-                        </label>
-                    </p>
-                    <p>
-                        <label>
-                            <input type="checkbox" name="ktwp_cache_trash_post" value="1"
-                                <?php checked(get_option('ktwp_cache_trash_post','1'), '1'); ?>>
-                            <strong>Cache trash_post</strong>
-                        </label>
-                    </p>
-                    <p>
-                        <label>
-                            <input type="checkbox" name="ktwp_cache_wp_ajax_edit-theme-plugin-file" value="1"
-                                <?php checked(get_option('ktwp_cache_wp_ajax_edit-theme-plugin-file','0'), '1'); ?>>
-                            <strong>Cache wp_ajax_edit-theme-plugin-file </strong> (defaults off; may cause performance issues while working on the back end, depending on your set up, as it recalculates things frequently while you're working on theme or plugin files. However, if you keep this off, a plugin like <a href="https://wordpress.org/plugins/transients-manager/" target="_blank">Transients Manager</a> is recommended, so you can manually clear the transient storage, where this plugin keeps cached values, after working on theme or plugin files.)
-                        </label>
-                    </p>
-                </div>
-                <p><input type="submit" name="ktwp_cache_submit" class="button button-primary" value="Save Settings"></p>
-            </form>
-        </details>
-        <?php
-    });
-}); */
 
 
 // Register settings
@@ -345,67 +229,16 @@ return $theDate;
   }
 
 
-/* no don't need this anymore, and very expensive
-  if (!function_exists('utf8_encode_recursive')) {
-
-// Helper function to recursively encode all elements to UTF-8
-function utf8_encode_recursive($data) {
-    if (is_string($data)) {
-        return mb_convert_encoding($data, 'UTF-8', 'UTF-8');
-    } elseif (is_array($data)) {
-        foreach ($data as $key => $value) {
-            $data[$key] = utf8_encode_recursive($value);
-        }
-    } elseif (is_object($data)) {
-        foreach ($data as $key => $value) {
-            $data->$key = utf8_encode_recursive($value);
-        }
-    }
-    return $data;
-}
-  }
-*/
   if (!function_exists('hashArguments')) {
 function hashArguments($arguments = []) {
- /* nah, don't need
-     // Handle resources
-    if (is_resource($arguments)) {
-        return sha1(get_resource_type($arguments) . strval($arguments));
-    }
-    
-    // Handle closures
-    if ($arguments instanceof Closure) {
-        $reflection = new ReflectionFunction($arguments);
-        return sha1($reflection->getFileName() . $reflection->getStartLine());
-    }
-    */
-    // Everything else
+ 
     return sha1(serialize($arguments));
 }
 
-/* this was the old way. Very inefficient... multiple conversions, needless UTF8 encouding. 
-function xhashArguments ($arguments=[]){ 
-	// Ensure the arguments are properly encoded to UTF-8
-    $arguments = utf8_encode_recursive($arguments);
-
-    // Encode the arguments into a JSON string
-    $encodedArguments = json_encode($arguments);
-
-    // Check for JSON encoding errors
-    if ($encodedArguments === false) {
-        // Fall back to serialize if json_encode fails
-        $encodedArguments = serialize($arguments);
-    }
-
-    // Hash the encoded arguments to ensure a fixed length and valid characters
-    $hashedArguments = sha1($encodedArguments);
-return $hashedArguments;
-	
-} */
   }
 
 if (!function_exists('getFunctionTransient')) {
-function getFunctionTransient($functionName, $arguments=[], $manualClearOnly=false) {
+function getFunctionTransient($functionName, $arguments=[], $manualClearOnly=false /* return present cached version even if site has been updated since it was stored */ ) {
     if (is_admin()) {
         return null;
     }
