@@ -239,9 +239,12 @@ function hashArguments($arguments = []) {
 
 if (!function_exists('getFunctionTransient')) {
 function getFunctionTransient($functionName, $arguments=[], $manualClearOnly=false /* return present cached version even if site has been updated since it was stored */ ) {
-    if (is_admin()) { /* this is check for admin screens, not logged in as admin */
+	
+	/* this is check for admin screens, not logged in as admin  - but,
+	 you know what, I don't know why I have it. Why recalculate everything on admin screens if a page is called in the background? If I can think of some reason I had this maybe add a settings screen checkbox to turn it on or off so I can test it. I think it's not needed, though.
+    if (is_admin()) { 
         return null;
-    }
+    }*/
     
     $hashArgs = hashArguments($arguments);
     $transient = wp_cache_get('mkFuncTransient' . $functionName . $hashArgs,'ktwp_cache');
@@ -262,7 +265,7 @@ function getFunctionTransient($functionName, $arguments=[], $manualClearOnly=fal
 
 if (!function_exists('setFunctionTransient')) {
 function setFunctionTransient($functionName, $value = null, $arguments=[]) {
-    if (defined('WP_ADMIN') && isset($_POST['action']) && $_POST['action'] === 'edit-theme-plugin-file') {
+    if ((defined('WP_ADMIN') && isset($_POST['action']) && $_POST['action'] === 'edit-theme-plugin-file')) {
         return;
     }
     if (isset($_POST['action']) && $_POST['action'] === 'edit-theme-plugin-file') {
