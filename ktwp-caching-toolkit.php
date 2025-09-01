@@ -239,7 +239,7 @@ function hashArguments($arguments = []) {
 
 if (!function_exists('getFunctionTransient')) {
 function getFunctionTransient($functionName, $arguments=[], $manualClearOnly=false /* return present cached version even if site has been updated since it was stored */ ) {
-    if (is_admin()) {
+    if (is_admin()) { /* this is check for admin screens, not logged in as admin */
         return null;
     }
     
