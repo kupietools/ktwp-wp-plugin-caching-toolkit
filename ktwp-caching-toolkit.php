@@ -28,11 +28,12 @@
         register_setting('ktwp_cache_options', 'ktwp_cache_delete_term');
         register_setting('ktwp_cache_options', 'ktwp_cache_trash_post');
         register_setting('ktwp_cache_options', 'ktwp_cache_wp_ajax_edit-theme-plugin-file');
+        register_setting('ktwp_cache_options', 'ktwp_cache_debug_logging');
     });
     
 
 
-/* WAS, caused dup menu.
+/* DISABLED, save for reference - caused dup menu.
 // Add menu
 add_action('admin_menu', function() {
     add_menu_page(
@@ -49,6 +50,7 @@ add_action('admin_menu', function() {
     );
 }); */
 
+//Add to Kupietools admin menu
 add_action('admin_menu', function () {
     global $menu;
     $exists = false;
@@ -84,8 +86,8 @@ add_action('admin_menu', function () {
     add_action('kupietools_sections', function() {
         ?>
         <details class="card ktwpcache" style="max-width: 800px; padding: 20px; margin-top: 20px;" open="true">
-            <summary style="font-weight:bold;">KTWP Cache ToolkitSettings</summary>
-            Clear KTWP cache whenever the following Wordpress actions run:
+            <summary style="font-weight:bold;">KTWP Cache Toolkit Settings</summary>
+            <h3>Clear KTWP cache whenever the following Wordpress actions run:</h3>
             <form method="post" action="options.php">
                 <?php
                 settings_fields('ktwp_cache_options');
@@ -155,6 +157,21 @@ add_action('admin_menu', function () {
                         </label>
                     </p>
                 </div>
+				<h3>Write cache performance timing for getting and setting to debug log (when debug logging is on):</h3><p>
+				Only works if KTWP Function Timer plugin is installed and WordPress debug logging is enabled. 
+				</p><p>
+				<b>WARNING!</b> Depending on how you use the caching functions, this can easily generate HUGE logfiles... many GB of logged data a day, even on a small, infrequently-visited site! Do <b>NOT</b> leave this running. Turn it on when you need it and then turn it off again as soon as you're done running the functions you want to measure the cache activity of. 
+				</p>
+	<div> <p>
+                        <label>
+                            <input type="checkbox" name="ktwp_cache_debug_logging" value="1" 
+                                <?php checked(get_option('ktwp_cache_debug_logging', '0'), '1'); ?>> 
+                            <strong>Log cache timing</strong>
+                        </label>
+                    </p>
+		
+				</div>
+				
                 <?php submit_button('Save Settings'); ?>
             </form>
         </details>
@@ -171,6 +188,7 @@ $edited_terms = get_option('ktwp_cache_edited_terms','1');
 $delete_term = get_option('ktwp_cache_delete_term','1'); 
 $trash_post = get_option('ktwp_cache_trash_post','1');
 $wp_ajax_edit_theme_plugin_file = get_option('ktwp_cache_wp_ajax_edit-theme-plugin-file','0');
+$log_timing = get_option('ktwp_cache_debug_logging','0');
 
 // Each will return '1' if checked, '0' if unchecked
  
@@ -185,6 +203,15 @@ if ($edited_terms == '1') {add_action( 'edited_terms', 'setLastUpdateTimestamp',
 if ($delete_term == '1') {add_action( 'delete_term', 'setLastUpdateTimestamp', 10, 3 ); }
 if ($trash_post == '1') {add_action( 'trash_post', 'setLastUpdateTimestamp' ); }
 if ($wp_ajax_edit_theme_plugin_file == '1') {add_action('wp_ajax_edit-theme-plugin-file', 'setLastUpdateTimestamp',0 ); } //update theme or plugin file. We are developers, after all. Needs priority 0 to work per https://core.trac.wordpress.org/ticket/42840
+
+function logCache($callback, $params = [], $variables = []){
+	global $log_timing;
+ if ( $log_timing && function_exists('ktwp_f_timer')) {
+return ktwp_f_timer($callback, $params, $variables);
+													 
+} else 
+ {return call_user_func_array($callback, $params);}
+}
 
 
   if (!function_exists('setLastUpdateTimestamp')) {
@@ -206,19 +233,27 @@ wp_cache_flush_group('ktwp_cache');
 
 $theNow=microtime(true); 
 //echo ktwp_comment ("setting last overall update to ".$theNow);
- wp_cache_set( 'mkFuncTransient_LastUpdate_all',$theNow,'ktwp_cache',2592000); //shouldn't need now that flushing cache, but, some caches don't support wp_cache_flush_group
+
+logCache('wp_cache_set', ['mkFuncTransient_LastUpdate_all',$theNow,'ktwp_cache',2592000],["function"=>__FUNCTION__]);
+// WAS wp_cache_set( 'mkFuncTransient_LastUpdate_all',$theNow,'ktwp_cache',2592000); //shouldn't need now that flushing cache, but, some caches don't support wp_cache_flush_group
 }
   }
 
   if (!function_exists('latestPostUpdate')) {
 function latestPostUpdate() {	
-    $theDate = wp_cache_get( 'mkFuncTransient_LastUpdate_all','ktwp_cache'); 
+	
+	
+	$theDate =  logCache('wp_cache_get', [ 'mkFuncTransient_LastUpdate_all','ktwp_cache'],["function"=>__FUNCTION__]);
+	
+ //WAS   $theDate = wp_cache_get( 'mkFuncTransient_LastUpdate_all','ktwp_cache'); 
 //echo ktwp_comment("last overall update was ".    $theDate);
 	
 if ( (! isset($theDate)) || (! $theDate > 0)) {
 	
     $theDate=microtime(true);
-wp_cache_set( 'mkFuncTransient_LastUpdate_all',$theDate,'ktwp_cache',2592000);  //dont expire for 1 month }
+	logCache('wp_cache_set', ['mkFuncTransient_LastUpdate_all',$theDate,'ktwp_cache',2592000],["function"=>__FUNCTION__]);
+	
+//WAS wp_cache_set( 'mkFuncTransient_LastUpdate_all',$theDate,'ktwp_cache',2592000);  //dont expire for 1 month }
 //echo ktwp_comment ("last overall update wasn't set, setting to ".$theDate);
     }
 
@@ -238,16 +273,18 @@ function hashArguments($arguments = []) {
   }
 
 if (!function_exists('getFunctionTransient')) {
-function getFunctionTransient($functionName, $arguments=[], $manualClearOnly=false /* return present cached version even if site has been updated since it was stored */ ) {
+function getFunctionTransient($functionName, $arguments=[], $manualClearOnly=false /* return present cached version even if site has been updated since it was stored */,$funcID="" ) {
 	
-	/* this is check for admin screens, not logged in as admin  - but,
+	/* this was check for admin screens, not logged in as admin  - but,
 	 you know what, I don't know why I have it. Why recalculate everything on admin screens if a page is called in the background? If I can think of some reason I had this maybe add a settings screen checkbox to turn it on or off so I can test it. I think it's not needed, though.
     if (is_admin()) { 
         return null;
     }*/
     
     $hashArgs = hashArguments($arguments);
-    $transient = wp_cache_get('mkFuncTransient' . $functionName . $hashArgs,'ktwp_cache');
+	
+	$transient = logCache('wp_cache_get', ['mkFuncTransient' . $functionName . $hashArgs,'ktwp_cache'],["function"=>$functionName,"arguments"=>$arguments,"manualClearOnly"=>$manualClearOnly,"funcID"=>$funcID]);
+   //WAS  $transient = wp_cache_get('mkFuncTransient' . $functionName . $hashArgs,'ktwp_cache');
     
     if ($transient !== false) {
         if (!is_array($transient) || !isset($transient['data']) || !isset($transient['lastupdate'])) {
@@ -264,12 +301,12 @@ function getFunctionTransient($functionName, $arguments=[], $manualClearOnly=fal
 }
 
 if (!function_exists('setFunctionTransient')) {
-function setFunctionTransient($functionName, $value = null, $arguments=[]) {
+function setFunctionTransient($functionName, $value = null, $arguments=[],$funcID="") {
     if ((defined('WP_ADMIN') && isset($_POST['action']) && $_POST['action'] === 'edit-theme-plugin-file')) {
-        return;
+        return; /* don't overwrite transients while saving theme files */
     }
     if (isset($_POST['action']) && $_POST['action'] === 'edit-theme-plugin-file') {
-        return;
+        return;/* don't overwrite transients while saving plugin files */
     }
     
     $hashArgs = hashArguments($arguments);
@@ -283,8 +320,8 @@ function setFunctionTransient($functionName, $value = null, $arguments=[]) {
         'data' => $value,
         'lastupdate' => microtime(true)
     ];
-    
-    wp_cache_set('mkFuncTransient' . $functionName . $hashArgs, $transient, 'ktwp_cache', 2592000);
+    logCache('wp_cache_set', ['mkFuncTransient' . $functionName . $hashArgs, $transient, 'ktwp_cache', 2592000],["function"=>$functionName,"value"=>$value,"arguments"=>$arguments,"funcID"=>$funcID]);
+// WAS    wp_cache_set('mkFuncTransient' . $functionName . $hashArgs, $transient, 'ktwp_cache', 2592000);
     
     return $value;
 }
@@ -292,7 +329,7 @@ function setFunctionTransient($functionName, $value = null, $arguments=[]) {
  // end useful functions
 
 
-/* automatically cache shortcodes... doesn't work with things like photonic which somehow queue up js to postprocess that isn't captured in the output of the shortcode. 
+/* SAVE FOR REFERENCE: automatically cache shortcodes... this doesn't work with plugins like photonic which queue up js files to postprocess the shortcode output. That isn't captured in the output of the shortcode, and serving the shortcode output from cache doesn't engueue the js scripts. 
  
 add_filter( 'pre_do_shortcode_tag', 'pritect_whitelist_shortcodes', 10, 4 );
 add_filter('do_shortcode_tag', 'cache_shortcode_output', 10, 4);
