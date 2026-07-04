@@ -308,6 +308,7 @@ function setFunctionTransient($functionName, $value = null, $arguments=[],$funcI
     if (isset($_POST['action']) && $_POST['action'] === 'edit-theme-plugin-file') {
         return;/* don't overwrite transients while saving plugin files */
     }
+	if (is_admin()) { return $value; /* 2026jul3 - decided to never cache while in admin area. Yoast processes content on save, and the htmlmap shortcode was rendering, but the default thumbnail has to not run on admin screens or it fucks with the post editing, so the htmlmap in the blog etc. pages were getting cached without the thumbnails. Probably no reason to be caching things outside of users loading pages, anyway. */}
     
     $hashArgs = hashArguments($arguments);
     
