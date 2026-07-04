@@ -276,7 +276,7 @@ if (!function_exists('getFunctionTransient')) {
 function getFunctionTransient($functionName, $arguments=[], $manualClearOnly=false /* return present cached version even if site has been updated since it was stored */,$funcID="" ) {
 	
 	/* this was check for admin screens, not logged in as admin  - but,
-	 you know what, I don't know why I have it. Why recalculate everything on admin screens if a page is called in the background? If I can think of some reason I had this maybe add a settings screen checkbox to turn it on or off so I can test it. I think it's not needed, though.
+	 you know what, I don't know why I have it. Why recalculate everything on admin screens if a page is called in the background? If I can think of some reason I had this maybe add a settings screen checkbox to turn it on or off so I can test it. I think it's not needed, though. (UPDATE, 2026jul3... meh.... some things, like my default thumbnails, must only render on the front end, but Yoast's indexing processes content on page save while still in admin, and htmlmap was getting cached with missing thumbnails because of it! So, still don't actually need this in getFunctionTransient, but re-added this check below, where it belongs, in setFunctionTransient, so transients don't get cached while in admin mode. )
     if (is_admin()) { 
         return null;
     }*/
